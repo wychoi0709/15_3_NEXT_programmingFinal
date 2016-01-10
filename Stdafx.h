@@ -2,7 +2,7 @@
 // 표준 시스템 포함 파일 또는 프로젝트 관련 포함 파일이
 // 들어 있는 포함 파일입니다.
 //
-
+#define _CRT_SECURE_NO_WARNINGS
 #pragma once
 
 #include "targetver.h"

@@ -12,17 +12,26 @@ int main(){
 
 	int i;
 	int j;
-	int arrLen = 5;//이중포인터 안의 총 배열의 길이
+	int k;
+	int arrLen;//이중포인터 안의 총 배열의 길이
 	int chooseNum = 0;//명령 선택할 변수
 	char targetName[30];//찾거나 지울때, 이름 받음
 	int arrCount = 0;//지금 사용하고 있는 배열의 최종 인덱스
 	PhoneInfo*** phoneInfoArr;
 	char c = '0';//입력버퍼가 빠지지 않아서 생기는 문제를 해결하기 위한 임시변수
-
+	FILE *inputConfigInfo, *outputConfigInfo;
+	FILE *inputPhoneInfo, *outputPhoneinfo;
+	char buffer[500];
+	char *pointerForBuffer;
 
 	system("mode con:cols=100 lines=40");
 	system("title Final Project By WonYoung");
 
+	//총 몇 개의 정보가 들어가 있는지에 대한 txt파일을 읽어서 arrLen에 저장 START
+	fopen_s(&inputConfigInfo, "InformationOfPhoneBook.txt", "r");
+	fscanf_s(inputConfigInfo, "%d", &arrLen);
+	fclose(inputConfigInfo);
+	//총 몇 개의 정보가 들어가 있는지에 대한 txt파일을 읽어서 arrLen에 저장 END
 
 	//다른 메소드로 넘기기 위한 삼중 포인터 하나를 동적으로 할당 START
 	phoneInfoArr = (PhoneInfo***)malloc(sizeof(PhoneInfo**));
@@ -31,14 +40,12 @@ int main(){
 	}
 	//다른 메소드로 넘기기 위한 삼중 포인터 하나를 동적으로 할당 START
 
-
-	//5개짜리 배열을 동적으로 할당 START
+	//파일에 있는 수만큼 배열을 동적으로 할당 START
 	phoneInfoArr[0] = (PhoneInfo**)malloc(sizeof(PhoneInfo*) * arrLen);
 	if (phoneInfoArr == NULL) {
 		exit(-1);
 	}
-	//5개짜리 배열을 동적으로 할당 END
-
+	//파일에 있는 수만큼 배열을 동적으로 할당 END
 
 	//개수만큼 돌면서 PhoneInfo가 들어갈 자리를 동적으로 할당 시작
 	for (i = 0; i < arrLen; i++) {
@@ -58,15 +65,52 @@ int main(){
 			free(phoneInfoArr[0][i]->numberInfoArr);
 			exit(-1);
 		}
-		phoneInfoArr[0][i]->countNumInfo = 1;//numberInfoArr의 크기를 1로 우선 지정(나중에 다 만들고 6으로 늘릴 것)
+
+	}
+	//개수만큼 돌면서 PhoneInfo가 들어갈 자리를 동적으로 할당 종료
+
+	//파일을 읽어서 정보를 입력 START
+	fopen_s(&inputPhoneInfo, "PhoneBook.txt", "r");
+
+	i = 0;
+	while (EOF != fgets(buffer, sizeof(buffer), inputPhoneInfo)){
+		//tab 단위로 떼어내서 각 요소에 넣을 것 START
+		//buffer에는 잘 담김 tab 단위로 떼어내기만 하면 됨
+		pointerForBuffer = strchr(buffer, '\t');
+		pointerForBuffer = strchr(buffer, '\t');
+		pointerForBuffer = strchr(buffer, '\t');
+		//tab 단위로 떼어내서 각 요소에 넣을 것 END
+		
+
 		//NumberInfoArr안의 NumberInfo를 countNumInfo만큼 말록 시작
 		for (j = 0; j < phoneInfoArr[0][i]->countNumInfo; j++) {
 			phoneInfoArr[0][i]->numberInfoArr[j] = (NumberInfo*)malloc(sizeof(NumberInfo));
 			memset(phoneInfoArr[0][i]->numberInfoArr[j], 0, sizeof(NumberInfo));
 		}
 		//NumberInfoArr안의 NumberInfo를 countNumInfo만큼 말록 종료
+
+
+		//countNumInfo 만큼 돌면서 kindOfnumber와 phoneNumber를 넣음 START
+		
+		//countNumInfo 만큼 돌면서 kindOfnumber와 phoneNumber를 넣음 END
+		i++;
 	}
-	//개수만큼 돌면서 PhoneInfo가 들어갈 자리를 동적으로 할당 종료
+	fclose(inputPhoneInfo);
+	//파일을 읽어서 정보를 입력 END
+
+
+	/*
+	outputPhoneinfo = fopen("output.txt", "w");
+
+	fprintf(outputPhoneinfo, "%8d\n", num);
+
+
+	fclose(outputPhoneinfo);
+	*/
+
+
+
+
 
 	//do-while 시작
 	do {
@@ -233,14 +277,14 @@ void insertInfo(int takenArrCount, PhoneInfo ***phoneInfoArr) {
 	//메모 입력 부분(너무 길면 제한) END
 
 
-	phoneInfoArr[0][arrCount]->countNumInfo = 0;
+	phoneInfoArr[0][arrCount]->countNumInfo = 1;
 	do {
 		getchar();
-		printf("\n%d번째 전화번호 정보를 입력합니다\n", (phoneInfoArr[0][arrCount]->countNumInfo) + 1);
+		printf("\n%d번째 전화번호 정보를 입력합니다\n", (phoneInfoArr[0][arrCount]->countNumInfo));
 		//전화번호 종류를 입력하는 부분(너무 길면 제한) START
 		printf("어디 전화번호인가요?(집전화, 직장전화, 휴대전화, 팩스 등등): ");
-		while (scanf_s("%[^\n]s", phoneInfoArr[0][arrCount]->numberInfoArr[(phoneInfoArr[0][arrCount]->countNumInfo)]->kindOfNumber,
-			sizeof(phoneInfoArr[0][arrCount]->numberInfoArr[(phoneInfoArr[0][arrCount]->countNumInfo)]->kindOfNumber)) != 1) {
+		while (scanf_s("%[^\n]s", phoneInfoArr[0][arrCount]->numberInfoArr[(phoneInfoArr[0][arrCount]->countNumInfo)-1]->kindOfNumber,
+			sizeof(phoneInfoArr[0][arrCount]->numberInfoArr[(phoneInfoArr[0][arrCount]->countNumInfo)-1]->kindOfNumber)) != 1) {
 			printf("너무 길게 입력하셨습니다. 영문 30자, 한글 15자 이내로 입력해주세요.\n");
 			printf("어디 전화번호인가요?(집전화, 직장전화, 휴대전화, 팩스 등등): ");
 		}
@@ -253,17 +297,17 @@ void insertInfo(int takenArrCount, PhoneInfo ***phoneInfoArr) {
 
 			notNumFormat = 0;
 			getchar();
-			while (scanf_s("%[^\n]s", phoneInfoArr[0][arrCount]->numberInfoArr[(phoneInfoArr[0][arrCount]->countNumInfo)]->phoneNumber,
-				sizeof(phoneInfoArr[0][arrCount]->numberInfoArr[(phoneInfoArr[0][arrCount]->countNumInfo)]->phoneNumber)) != 1) {
+			while (scanf_s("%[^\n]s", phoneInfoArr[0][arrCount]->numberInfoArr[(phoneInfoArr[0][arrCount]->countNumInfo)-1]->phoneNumber,
+				sizeof(phoneInfoArr[0][arrCount]->numberInfoArr[(phoneInfoArr[0][arrCount]->countNumInfo)-1]->phoneNumber)) != 1) {
 				printf("너무 긴 전화번호를 입력하셨습니다. 30자 이내로 입력해주세요.\n");
 				printf("전화번호를 입력하세요(숫자와 기호'-'만 입력 가능합니다): ");
 			}
 
 			i = 0;
-			while (phoneInfoArr[0][arrCount]->numberInfoArr[(phoneInfoArr[0][arrCount]->countNumInfo)]->phoneNumber[i] != '\0') {
-				if ((phoneInfoArr[0][arrCount]->numberInfoArr[(phoneInfoArr[0][arrCount]->countNumInfo)]->phoneNumber[i] < 48
-					|| phoneInfoArr[0][arrCount]->numberInfoArr[(phoneInfoArr[0][arrCount]->countNumInfo)]->phoneNumber[i]>57)
-					&& phoneInfoArr[0][arrCount]->numberInfoArr[(phoneInfoArr[0][arrCount]->countNumInfo)]->phoneNumber[i] != 45) {//아스키 48 ~ 57이 숫자
+			while (phoneInfoArr[0][arrCount]->numberInfoArr[(phoneInfoArr[0][arrCount]->countNumInfo)-1]->phoneNumber[i] != '\0') {
+				if ((phoneInfoArr[0][arrCount]->numberInfoArr[(phoneInfoArr[0][arrCount]->countNumInfo)-1]->phoneNumber[i] < 48
+					|| phoneInfoArr[0][arrCount]->numberInfoArr[(phoneInfoArr[0][arrCount]->countNumInfo)-1]->phoneNumber[i]>57)
+					&& phoneInfoArr[0][arrCount]->numberInfoArr[(phoneInfoArr[0][arrCount]->countNumInfo)-1]->phoneNumber[i] != 45) {//아스키 48 ~ 57이 숫자
 					notNumFormat++;
 				}
 				i++;
@@ -304,19 +348,19 @@ void insertInfo(int takenArrCount, PhoneInfo ***phoneInfoArr) {
 			(phoneInfoArr[0][arrCount]->countNumInfo)++;
 			//이전 것들을 임시 말록 받아서 넣고, 리얼록 받은 것에 복제하는 방법
 			phoneInfoArr[0][arrCount]->numberInfoArr = (NumberInfo**)realloc(phoneInfoArr[0][arrCount]->numberInfoArr,
-				sizeof(NumberInfo*)*((phoneInfoArr[0][arrCount]->countNumInfo) + 1));//추가적으로 길이를 하나 늘려서 동적으로 재할당
+				sizeof(NumberInfo*)*((phoneInfoArr[0][arrCount]->countNumInfo)));//추가적으로 길이를 하나 늘려서 동적으로 재할당
 
 			if (phoneInfoArr[0][arrCount]->numberInfoArr == NULL) {
 				exit(-1);
 			}
 
 			//개수만큼 돌면서 추가된 자리에 PhoneInfo가 들어갈 자리를 동적으로 다시 할당 시작
-			for (i = (phoneInfoArr[0][arrCount]->countNumInfo); i <= (phoneInfoArr[0][arrCount]->countNumInfo); i++) {
+			for (i = (phoneInfoArr[0][arrCount]->countNumInfo)-1; i < (phoneInfoArr[0][arrCount]->countNumInfo); i++) {
 				phoneInfoArr[0][arrCount]->numberInfoArr[i] = (NumberInfo*)malloc(sizeof(NumberInfo));
 				memset(phoneInfoArr[0][arrCount]->numberInfoArr[i], 0, sizeof(NumberInfo));
 				if (phoneInfoArr[0][arrCount]->numberInfoArr[i] == NULL) {
 					for (j = 0; j < i; j++) {
-						free(phoneInfoArr[0][arrCount]->numberInfoArr[i]);
+						free(phoneInfoArr[0][arrCount]->numberInfoArr[j]);
 					}
 					free(phoneInfoArr[0][arrCount]->numberInfoArr);
 					exit(-1);
