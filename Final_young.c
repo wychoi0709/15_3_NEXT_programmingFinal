@@ -5,6 +5,7 @@
 #include "InformationOfPhoneNumber.h"
 #include "AllMethods.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 
 
@@ -13,25 +14,29 @@ int main(){
 	int i;
 	int j;
 	int k;
-	int arrLen;//이중포인터 안의 총 배열의 길이
+	int arrLen=50;//이중포인터 안의 총 배열의 길이
 	int chooseNum = 0;//명령 선택할 변수
 	char targetName[30];//찾거나 지울때, 이름 받음
-	int arrCount = 0;//지금 사용하고 있는 배열의 최종 인덱스
+	int arrCount;//지금 사용하고 있는 배열의 최종 인덱스
 	PhoneInfo*** phoneInfoArr;
 	char c = '0';//입력버퍼가 빠지지 않아서 생기는 문제를 해결하기 위한 임시변수
 	FILE *inputConfigInfo, *outputConfigInfo;
 	FILE *inputPhoneInfo, *outputPhoneinfo;
-	char buffer[500];
+	char buffer[1000];
 	char *pointerForBuffer;
+
+	char *context = NULL;//strtok_s를 쓰기위한 세번째 변수
+	char *token = NULL;//strtok_s의 토큰
+	char criteria = '\t';
 
 	system("mode con:cols=100 lines=40");
 	system("title Final Project By WonYoung");
 
-	//총 몇 개의 정보가 들어가 있는지에 대한 txt파일을 읽어서 arrLen에 저장 START
+	//총 몇 개의 정보가 들어가 있는지에 대한 txt파일을 읽어서 arrCount에 저장 START
 	fopen_s(&inputConfigInfo, "InformationOfPhoneBook.txt", "r");
-	fscanf_s(inputConfigInfo, "%d", &arrLen);
+	fscanf_s(inputConfigInfo, "%d", &arrCount);
 	fclose(inputConfigInfo);
-	//총 몇 개의 정보가 들어가 있는지에 대한 txt파일을 읽어서 arrLen에 저장 END
+	//총 몇 개의 정보가 들어가 있는지에 대한 txt파일을 읽어서 arrCount에 저장 END
 
 	//다른 메소드로 넘기기 위한 삼중 포인터 하나를 동적으로 할당 START
 	phoneInfoArr = (PhoneInfo***)malloc(sizeof(PhoneInfo**));
@@ -40,14 +45,14 @@ int main(){
 	}
 	//다른 메소드로 넘기기 위한 삼중 포인터 하나를 동적으로 할당 START
 
-	//파일에 있는 수만큼 배열을 동적으로 할당 START
+	//배열을 동적으로 할당(arrLen) START
 	phoneInfoArr[0] = (PhoneInfo**)malloc(sizeof(PhoneInfo*) * arrLen);
 	if (phoneInfoArr == NULL) {
 		exit(-1);
 	}
-	//파일에 있는 수만큼 배열을 동적으로 할당 END
+	//배열을 동적으로 할당(arrLen) END
 
-	//개수만큼 돌면서 PhoneInfo가 들어갈 자리를 동적으로 할당 시작
+	//개수(arrLen)만큼 돌면서 PhoneInfo가 들어갈 자리를 동적으로 할당 시작
 	for (i = 0; i < arrLen; i++) {
 		phoneInfoArr[0][i] = (PhoneInfo*)malloc(sizeof(PhoneInfo));
 		memset(phoneInfoArr[0][i], 0, sizeof(PhoneInfo));
@@ -65,22 +70,31 @@ int main(){
 			free(phoneInfoArr[0][i]->numberInfoArr);
 			exit(-1);
 		}
-
+		//전화번호 들어갈 자리 하나 씩은 만들어주기 START
+		phoneInfoArr[0][i]->countNumInfo = 1;
+		phoneInfoArr[0][i]->numberInfoArr[0] = (NumberInfo*)malloc(sizeof(NumberInfo));
+		memset(phoneInfoArr[0][i]->numberInfoArr[0], 0, sizeof(NumberInfo));
+		//전화번호 들어갈 자리 하나 씩은 만들어주기 END
 	}
-	//개수만큼 돌면서 PhoneInfo가 들어갈 자리를 동적으로 할당 종료
+	//개수(arrLen)만큼 돌면서 PhoneInfo가 들어갈 자리를 동적으로 할당 종료
+
 
 	//파일을 읽어서 정보를 입력 START
 	fopen_s(&inputPhoneInfo, "PhoneBook.txt", "r");
 
 	i = 0;
-	while (EOF != fgets(buffer, sizeof(buffer), inputPhoneInfo)){
+	while (i<arrCount){
+		fgets(buffer, 1000, inputPhoneInfo);
+		buffer[strlen(buffer) - 1] = '\0';
+
 		//tab 단위로 떼어내서 각 요소에 넣을 것 START
-		//buffer에는 잘 담김 tab 단위로 떼어내기만 하면 됨
-		pointerForBuffer = strchr(buffer, '\t');
-		pointerForBuffer = strchr(buffer, '\t');
-		pointerForBuffer = strchr(buffer, '\t');
-		//tab 단위로 떼어내서 각 요소에 넣을 것 END
+		strcpy(phoneInfoArr[0][i]->name, strtok_s(buffer, &criteria, &context));//첫 번째 자름. 이름
+		strcpy(phoneInfoArr[0][i]->address, strtok_s(context, &criteria, &context));//두 번째 자름. 주소
+		strcpy(phoneInfoArr[0][i]->birthday, strtok_s(context, &criteria, &context));//세 번째 자름. 생일
+		strcpy(phoneInfoArr[0][i]->memo, strtok_s(context, &criteria, &context));//네 번째 자름. 메모
 		
+		phoneInfoArr[0][i]->countNumInfo = atoi(strtok_s(context, &criteria, &context));//다섯 번째 자름. 전화번호 몇 개?
+		//tab 단위로 떼어내서 각 요소에 넣을 것 END
 
 		//NumberInfoArr안의 NumberInfo를 countNumInfo만큼 말록 시작
 		for (j = 0; j < phoneInfoArr[0][i]->countNumInfo; j++) {
@@ -89,28 +103,16 @@ int main(){
 		}
 		//NumberInfoArr안의 NumberInfo를 countNumInfo만큼 말록 종료
 
-
 		//countNumInfo 만큼 돌면서 kindOfnumber와 phoneNumber를 넣음 START
-		
+		for (j = 0; j < phoneInfoArr[0][i]->countNumInfo; j++) {
+			strcpy(phoneInfoArr[0][i]->numberInfoArr[j]->kindOfNumber, strtok_s(context, &criteria, &context));//전화번호 이름 
+			strcpy(phoneInfoArr[0][i]->numberInfoArr[j]->phoneNumber, strtok_s(context, &criteria, &context));//전화번호
+		}
 		//countNumInfo 만큼 돌면서 kindOfnumber와 phoneNumber를 넣음 END
 		i++;
 	}
 	fclose(inputPhoneInfo);
 	//파일을 읽어서 정보를 입력 END
-
-
-	/*
-	outputPhoneinfo = fopen("output.txt", "w");
-
-	fprintf(outputPhoneinfo, "%8d\n", num);
-
-
-	fclose(outputPhoneinfo);
-	*/
-
-
-
-
 
 	//do-while 시작
 	do {
@@ -170,6 +172,7 @@ int main(){
 
 			printAll(phoneInfoArr[0], arrCount);
 
+		}else if (chooseNum == 5) {
 		}else {
 			system("cls");
 			printf("\n\n잘못된 번호를 입력하셨습니다. 다시 입력해주세요.\n\n");
@@ -179,6 +182,37 @@ int main(){
 
 	} while (chooseNum != 5);
 	//do-while 종료
+
+	//총 몇 개의 전화부 정보가 저장되어 있는지를 저장 START
+	fopen_s(&outputConfigInfo, "InformationOfPhoneBook.txt", "wt");
+	fprintf_s(outputConfigInfo, "%d", arrCount);
+	fclose(outputConfigInfo);
+	//총 몇 개의 전화부 정보가 저장되어 있는지를 저장 END
+
+	//주소록 정보를 파일에 갱신해서 다시 담아줌 START
+	fopen_s(&outputPhoneinfo, "PhoneBook.txt", "wt");
+	i = 0;
+	while (i < arrCount) {
+		fputs(phoneInfoArr[0][i]->name, outputConfigInfo);
+		fprintf_s(outputPhoneinfo, "\t");
+		fputs(phoneInfoArr[0][i]->address, outputConfigInfo);
+		fprintf_s(outputPhoneinfo, "\t");
+		fputs(phoneInfoArr[0][i]->birthday, outputConfigInfo);
+		fprintf_s(outputPhoneinfo, "\t");
+		fputs(phoneInfoArr[0][i]->memo, outputConfigInfo);
+		fprintf_s(outputPhoneinfo, "\t");
+		fprintf_s(outputConfigInfo, "%d", phoneInfoArr[0][i]->countNumInfo);
+		for (j = 0; j < phoneInfoArr[0][i]->countNumInfo; j++) {
+			fprintf_s(outputPhoneinfo, "\t");
+			fputs(phoneInfoArr[0][i]->numberInfoArr[j]->kindOfNumber, outputConfigInfo);
+			fprintf_s(outputPhoneinfo, "\t");
+			fputs(phoneInfoArr[0][i]->numberInfoArr[j]->phoneNumber, outputConfigInfo);
+		}
+		fprintf_s(outputPhoneinfo, "\n");
+		i++;
+	}
+	fclose(outputPhoneinfo);
+	//주소록 정보를 파일에 갱신해서 다시 담아줌 END
 
 	//끝나서 모두 free 시작
 	for (i = 0; i < arrLen; i++) {
@@ -572,7 +606,7 @@ void searchInfo(PhoneInfo **phoneInfoArr, int arrCount) {
 					printf("  주소: %s\n", phoneInfoArr[i]->address);
 					printf("  생일: %s\n", phoneInfoArr[i]->birthday);
 					printf("  메모: %s\n", phoneInfoArr[i]->memo);
-					for (j = 0; j < (phoneInfoArr[i]->countNumInfo)+1; j++) {
+					for (j = 0; j < (phoneInfoArr[i]->countNumInfo); j++) {
 						printf("  %d번째 전화번호: %s [%s]\n", j+1, 
 							phoneInfoArr[i]->numberInfoArr[j]->kindOfNumber, 
 							phoneInfoArr[i]->numberInfoArr[j]->phoneNumber);
@@ -651,7 +685,7 @@ void searchInfo(PhoneInfo **phoneInfoArr, int arrCount) {
 					printf("  주소: %s\n", phoneInfoArr[i]->address);
 					printf("  생일: %s\n", phoneInfoArr[i]->birthday);
 					printf("  메모: %s\n", phoneInfoArr[i]->memo);
-					for (j = 0; j < (phoneInfoArr[i]->countNumInfo)+1; j++) {
+					for (j = 0; j < (phoneInfoArr[i]->countNumInfo); j++) {
 						printf("  %d번째 전화번호: %s [%s]\n", j + 1,
 							phoneInfoArr[i]->numberInfoArr[j]->kindOfNumber,
 							phoneInfoArr[i]->numberInfoArr[j]->phoneNumber);
@@ -697,7 +731,7 @@ void printAll(PhoneInfo **phoneInfoArr, int arrCount) {//모든 정보를 출력
 			printf("  주소: %s\n", phoneInfoArr[i]->address);
 			printf("  생일: %s\n", phoneInfoArr[i]->birthday);
 			printf("  메모: %s\n", phoneInfoArr[i]->memo);
-			for (j = 0; j < (phoneInfoArr[i]->countNumInfo)+1; j++) {
+			for (j = 0; j < (phoneInfoArr[i]->countNumInfo); j++) {
 				printf("  %d번째 전화번호: %s [%s]\n", j + 1,
 					phoneInfoArr[i]->numberInfoArr[j]->kindOfNumber,
 					phoneInfoArr[i]->numberInfoArr[j]->phoneNumber);
@@ -734,7 +768,7 @@ void viewPrintSuccessInsert(PhoneInfo **phoneInfoArr, int arrCount) {
 	printf("  주소: %s\n", phoneInfoArr[arrCount]->address);
 	printf("  생일: %s\n", phoneInfoArr[arrCount]->birthday);
 	printf("  메모: %s\n", phoneInfoArr[arrCount]->memo);
-	for (j = 0; j < (phoneInfoArr[arrCount]->countNumInfo)+1; j++) {
+	for (j = 0; j < (phoneInfoArr[arrCount]->countNumInfo); j++) {
 		printf("  %d번째 전화번호: %s [%s]\n", j + 1,
 			phoneInfoArr[arrCount]->numberInfoArr[j]->kindOfNumber,
 			phoneInfoArr[arrCount]->numberInfoArr[j]->phoneNumber);
